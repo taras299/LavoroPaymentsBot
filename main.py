@@ -28,7 +28,7 @@ class PaymentRequest(Base):
     __tablename__ = 'payment_requests'
     id = Column(Integer, Sequence('payment_request_id_seq'), primary_key=True)
     user_id = Column(Integer)
-    last_request_time = Column(Integer)  # Unix timestamp
+    last_request_time = Column(Integer)  
 
 engine = create_engine('sqlite:///bot.db')
 Base.metadata.create_all(engine)
@@ -155,17 +155,15 @@ def callback_query(call):
         return
 
     if call.data == 'get_payment':
-        # Check if the user has made a request in the last hour
         payment_request = session.query(PaymentRequest).filter(PaymentRequest.user_id == user_id).first()
         current_time = int(time.time())
 
         if payment_request:
             time_since_last_request = current_time - payment_request.last_request_time
-            if time_since_last_request < 3600:  # 3600 seconds = 1 hour
+            if time_since_last_request < 3600:  
                 bot.send_message(call.message.chat.id, "Выплату можно запросить раз в час!")
                 return
         
-        # Update or create a new payment request record
         if payment_request:
             payment_request.last_request_time = current_time
         else:
@@ -173,7 +171,6 @@ def callback_query(call):
             session.add(payment_request)
         session.commit()
 
-        # Proceed with payment request process
         user_payment_request[user_id] = True
         
         user = session.query(Payment).filter(Payment.user_id == user_id).first()
